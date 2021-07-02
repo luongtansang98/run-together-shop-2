@@ -6,9 +6,12 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using RegistrationAPI.DTO;
 using RegistrationAPI.Models;
+using RegistrationAPI.Utilities;
+using RegistrationAPI.Utilities.Paging;
 
 namespace RegistrationAPI.Controllers
 {
@@ -75,8 +78,13 @@ namespace RegistrationAPI.Controllers
 				obj.Code = orderCode;
 				obj.CustomerId = order.CustomerId;
 				obj.Status = OrderStatus.Shipping;
+				obj.ShipName = order.ShipName;
+				obj.ShipPhone = order.ShipPhone;
+				obj.ShipAddress = order.ShipAddress;
+				obj.ShipEmail = order.ShipEmail;
 				obj.DeliveryType = order.DeliveryType;
 				obj.PaymentType = order.PaymentType;
+				obj.OrderDate = order.OrderDate;
 
 				//lấy ra giỏ hàng của KH đó
 				var customerCarts = _context.Carts.Where(c => c.CustomerId == order.CustomerId).ToList();
@@ -168,6 +176,57 @@ namespace RegistrationAPI.Controllers
 			return result;
 
 		}
+		[Route("GetList")]
+		[HttpPost]
+		public IActionResult GetAllOrders(SearchModel searchModel)
+		{
+			try
+			{
+				var orders = _context.Orders.Include(n => n.Customer).Include(n => n.OrderDetails).Select(n => new OrderDTO()
+				{
+					Id = n.Id,
+					Code = n.Code,
+					DeliveryType = n.DeliveryType,
+					DeliveryTypeStr = EnumExtensions.GetEnumDisplayName((DeliveryType)n.DeliveryType),
+					PaymentType = n.PaymentType,
+					PaymentTypeStr = EnumExtensions.GetEnumDisplayName((PaymentType)n.PaymentType),
+					Status = n.Status,
+					StatusStr = EnumExtensions.GetEnumDisplayName((OrderStatus)n.Status),
+					OrderDate = n.OrderDate,
+					ShipName = n.ShipName ?? n.Customer.FullName,
+					ShipAddress = n.ShipAddress ?? n.Customer.Address,
+					ShipPhone = n.ShipPhone ?? n.Customer.Phone,
+					ShipEmail = n.ShipEmail ?? n.Customer.Email,
+					Note = n.Note
+				}).Where(n => n.Code.Contains(searchModel.OrderCode));
 
+				if (searchModel.DeliveryType.HasValue && searchModel.DeliveryType.Value > 0)
+				{
+					orders = orders.Where(n => n.DeliveryType == searchModel.DeliveryType.Value);
+				}
+				if (searchModel.PaymentType.HasValue && searchModel.PaymentType.Value > 0)
+				{
+					orders = orders.Where(n => n.PaymentType == searchModel.PaymentType.Value);
+				}
+				if (searchModel.OrderStatus.HasValue && searchModel.OrderStatus.Value > 0)
+				{
+					orders = orders.Where(n => n.Status == searchModel.OrderStatus.Value);
+				}
+				var results = PagingMethod.GetPaged(orders, searchModel.Page, 10);
+				return Ok(results);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, $"Internal server error: {ex}");
+			}
+		}
+	}
+	public class SearchModel
+	{
+		public int Page { get; set; }
+		public string OrderCode { get; set; }
+		public OrderStatus? OrderStatus { get; set; }
+		public DeliveryType? DeliveryType { get; set; }
+		public PaymentType? PaymentType { get; set; }
 	}
 }
