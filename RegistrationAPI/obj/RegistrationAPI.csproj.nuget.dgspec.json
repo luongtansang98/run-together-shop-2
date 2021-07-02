@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\imt_project\\try_dotNet\\RegistrationAPI\\RegistrationAPI\\RegistrationAPI.csproj": {}
+    "D:\\imt_project\\try_dotNet\\run-together-shop-2\\RegistrationAPI\\RegistrationAPI.csproj": {}
   },
   "projects": {
-    "D:\\imt_project\\try_dotNet\\RegistrationAPI\\RegistrationAPI\\RegistrationAPI.csproj": {
+    "D:\\imt_project\\try_dotNet\\run-together-shop-2\\RegistrationAPI\\RegistrationAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\imt_project\\try_dotNet\\RegistrationAPI\\RegistrationAPI\\RegistrationAPI.csproj",
+        "projectUniqueName": "D:\\imt_project\\try_dotNet\\run-together-shop-2\\RegistrationAPI\\RegistrationAPI.csproj",
         "projectName": "RegistrationAPI",
-        "projectPath": "D:\\imt_project\\try_dotNet\\RegistrationAPI\\RegistrationAPI\\RegistrationAPI.csproj",
+        "projectPath": "D:\\imt_project\\try_dotNet\\run-together-shop-2\\RegistrationAPI\\RegistrationAPI.csproj",
         "packagesPath": "C:\\Users\\sanglt\\.nuget\\packages\\",
-        "outputPath": "D:\\imt_project\\try_dotNet\\RegistrationAPI\\RegistrationAPI\\obj\\",
+        "outputPath": "D:\\imt_project\\try_dotNet\\run-together-shop-2\\RegistrationAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
