@@ -77,6 +77,7 @@ namespace RegistrationAPI.Controllers
 				Order obj = new Order();
 				obj.Code = orderCode;
 				obj.CustomerId = order.CustomerId;
+				obj.CustomerId = order.CustomerId;
 				obj.Status = OrderStatus.Shipping;
 				obj.ShipName = order.ShipName;
 				obj.ShipPhone = order.ShipPhone;
