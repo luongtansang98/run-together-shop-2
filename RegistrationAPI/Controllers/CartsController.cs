@@ -74,12 +74,41 @@ namespace RegistrationAPI.Controllers
 					{
 						Id = c.Id,
 						ImagePath = c.Product.ImagesList.FirstOrDefault().ImagePath.ToString(),
+						ProductId = c.Product.Id,
 						ProductCode = c.Product.Code,
 						ProductName = c.Product.Name,
 						Price = c.Product.PriceExport,
 						Quantity = c.Quantity,
 						TotalPrice = c.Quantity * c.Product.PriceExport
 					}).ToList();
+				//var productIds = lstResult.Select(n => n.ProductId).ToList();
+				//var products = _context.Products.Where(n => productIds.Contains(n.Id)).ToList();
+				foreach(var item in lstResult)
+				{
+					var promotionProduct = _context.PromotionProducts.Include(n => n.Promotion).Where(n => n.ProductId == item.ProductId).ToList();
+					if (promotionProduct.Count() > 0)
+					{
+						double discountTotal = 0;
+						foreach (var prom in promotionProduct)
+						{
+							if (prom.Promotion.PromotionTypeId == 1)
+							{
+								//discount by %
+								var discount = (item.Price * double.Parse(prom.Promotion.Value) / 100);
+								discountTotal += discount;
+							}
+							else
+							{
+								//discount by money
+								var discount = double.Parse(prom.Promotion.Value);
+								discountTotal += discount;
+							}
+
+						}
+						item.PriceWithDiscount = item.Price - discountTotal;
+						item.TotalPrice = item.Quantity * item.PriceWithDiscount.Value;
+					}
+				}
 				return Ok(lstResult);
 			}
 			catch (Exception ex)

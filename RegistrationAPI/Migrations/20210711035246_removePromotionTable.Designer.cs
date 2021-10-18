@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RegistrationAPI.Models;
 
 namespace RegistrationAPI.Migrations
 {
     [DbContext(typeof(AuthenticationContext))]
-    partial class AuthenticationContextModelSnapshot : ModelSnapshot
+    [Migration("20210711035246_removePromotionTable")]
+    partial class removePromotionTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -382,64 +384,6 @@ namespace RegistrationAPI.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("RegistrationAPI.Models.Promotion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<bool>("CanApplyForAll");
-
-                    b.Property<string>("Code");
-
-                    b.Property<DateTime>("CreatedAt");
-
-                    b.Property<string>("Description");
-
-                    b.Property<DateTime>("EndTime");
-
-                    b.Property<bool>("IsDisable");
-
-                    b.Property<string>("Name");
-
-                    b.Property<int>("PromotionTypeId");
-
-                    b.Property<DateTime>("StartTime");
-
-                    b.Property<DateTime>("UpdatedAt");
-
-                    b.Property<string>("Value");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PromotionTypeId");
-
-                    b.ToTable("Promotions");
-                });
-
-            modelBuilder.Entity("RegistrationAPI.Models.PromotionProduct", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<DateTime>("CreatedAt");
-
-                    b.Property<int>("ProductId");
-
-                    b.Property<int>("PromotionId");
-
-                    b.Property<DateTime>("UpdatedAt");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("PromotionId");
-
-                    b.ToTable("PromotionProducts");
-                });
-
             modelBuilder.Entity("RegistrationAPI.Models.PromotionType", b =>
                 {
                     b.Property<int>("Id")
@@ -457,24 +401,6 @@ namespace RegistrationAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PromotionTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2021, 7, 25, 16, 35, 56, 71, DateTimeKind.Local).AddTicks(1595),
-                            Description = "Giảm giá theo phần trăm",
-                            Name = "Phần trăm",
-                            UpdatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Trừ theo giá tiền",
-                            Name = "Giảm tiền",
-                            UpdatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("RegistrationAPI.Models.User", b =>
@@ -596,27 +522,6 @@ namespace RegistrationAPI.Migrations
                     b.HasOne("RegistrationAPI.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("RegistrationAPI.Models.Promotion", b =>
-                {
-                    b.HasOne("RegistrationAPI.Models.PromotionType", "PromotionType")
-                        .WithMany()
-                        .HasForeignKey("PromotionTypeId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("RegistrationAPI.Models.PromotionProduct", b =>
-                {
-                    b.HasOne("RegistrationAPI.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("RegistrationAPI.Models.Promotion", "Promotion")
-                        .WithMany()
-                        .HasForeignKey("PromotionId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

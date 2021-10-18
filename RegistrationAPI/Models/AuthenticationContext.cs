@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using RegistrationAPI.DTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,9 @@ namespace RegistrationAPI.Models
 {
 	public class AuthenticationContext: IdentityDbContext
 	{
-		public AuthenticationContext(DbContextOptions options):base(options)
+        public AuthenticationContext(DbContextOptions options):base(options)
 		{
-
+            
 		}
 		public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 		public DbSet<Position> Positions { get; set; }
@@ -21,6 +22,12 @@ namespace RegistrationAPI.Models
 		public DbSet<Cart> Carts { get; set; }
 		public DbSet<Order> Orders { get; set; }
 		public DbSet<OrderDetail> OrderDetails { get; set; }
+		public DbSet<PromotionType> PromotionTypes { get; set; }
+		public DbSet<Promotion> Promotions { get; set; }
+		public DbSet<PromotionProduct> PromotionProducts { get; set; }
+
+        public DbQuery<ProductQueryDTO> ProductQueries { get; set; }
+
         public override int SaveChanges()
         {
             this.ChangeTracker.DetectChanges();
@@ -55,5 +62,13 @@ namespace RegistrationAPI.Models
             return base.SaveChanges();
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PromotionType>().HasData(
+                new PromotionType() { Id = 1, CreatedAt = DateTime.Now, Name = "Phần trăm", Description = "Giảm giá theo phần trăm" },
+                new PromotionType() { Id = 2, Name = "Giảm tiền", Description = "Trừ theo giá tiền" });
+        }
     }
 }

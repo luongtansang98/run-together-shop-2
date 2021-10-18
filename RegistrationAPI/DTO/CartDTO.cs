@@ -16,5 +16,6 @@ namespace RegistrationAPI.DTO
 		public double TotalPrice { get; set;} 
 		public int Quantity { get; set; }
 		public int CustomerId { get; set; }
+		public Double? PriceWithDiscount { get; set; }
 	}
 }

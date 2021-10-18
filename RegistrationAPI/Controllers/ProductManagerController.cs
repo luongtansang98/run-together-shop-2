@@ -114,6 +114,7 @@ namespace RegistrationAPI.Controllers
 					PriceImport = product.PriceImport,
 					ProductGroupId = product.ProductGroupId,
 				};
+
 				int i = 1;
 				var images = this.RemoveDuplicates(product.ImagesList);
 				entity.ImagesList = images.Select(n => new ImageProduct()
@@ -121,6 +122,17 @@ namespace RegistrationAPI.Controllers
 					ImagePath = n.ImagePath,
 					Order = i++,
 				}).ToList();
+
+				if (product.PromotionList.Count > 0)
+				{
+					var promotion = _context.Promotions.FirstOrDefault(n => n.Id == product.PromotionList.First());
+					if(promotion == null)
+					{
+						return BadRequest("Mã khuyến mãi không tồn tại");
+					}
+					var promotionInsert = new PromotionProduct { Product = entity, Promotion = promotion };
+					_context.PromotionProducts.Add(promotionInsert);
+				}
 				_context.Add(entity);
 				_context.SaveChanges();
 
@@ -167,24 +179,40 @@ namespace RegistrationAPI.Controllers
 		}
 		[Route("GetList")]
 		[HttpPost]
-		public IActionResult GetAllProducts(SearchModel searchModel)
+		public async Task<IActionResult> GetAllProductsAsync(SearchModel searchModel)
 		{
 			try
 			{
-				var products = _context.Products.Include(n => n.ImagesList).Select(n => new ProductDTO()
+				const string sqlQuery = "select p.id, p.Name, p.Code,p.Description,p.ProductGroupId,p.ColorId, " +
+											"p.CategoryId,p.PriceExport,p.PriceImport,COUNT(ipp.ProductId) as CountImage, " +
+											"MIN(ipp.ImagePath) as FirstImagePath, pp.PromotionId,prom.Value, prom.PromotionTypeId " +
+											"from Products p " +
+											"left join PromotionProducts pp on p.Id = pp.ProductId " +
+											"left join Promotions prom on pp.PromotionId = prom.Id " +
+											"left join ImageProduct ipp on p.id = ipp.ProductId " +
+											"group by p.id, p.Name, p.Code, p.Description, p.ProductGroupId, p.ColorId, p.CategoryId, p.PriceExport, p.PriceImport, pp.PromotionId, prom.Value, prom.PromotionTypeId";
+
+				var products = _context.ProductQueries.FromSql(sqlQuery);
+
+				//var products = _context.Products.Include(n => n.ImagesList).Select(n => new ProductDTO()
+				//{
+				//	Id = n.Id,
+				//	Name = n.Name,
+				//	Code = n.Code,
+				//	Description = n.Description,
+				//	ProductGroupId = n.ProductGroupId,
+				//	ColorId = n.ColorId,
+				//	CategoryId = n.CategoryId,
+				//	PriceExport = n.PriceExport,
+				//	PriceImport = n.PriceImport,
+				//	CountImage = n.ImagesList.Count(),
+				//	FirseImagePath = n.ImagesList.Any() ? n.ImagesList.Select(i => i.ImagePath).FirstOrDefault() : null
+				//}).Where(n => n.Name.Contains(searchModel.CodeOrNameProduct));
+
+				if(!string.IsNullOrEmpty(searchModel.CodeOrNameProduct))
 				{
-					Id = n.Id,
-					Name = n.Name,
-					Code = n.Code,
-					Description = n.Description,
-					ProductGroupId = n.ProductGroupId,
-					ColorId = n.ColorId,
-					CategoryId = n.CategoryId,
-					PriceExport = n.PriceExport,
-					PriceImport = n.PriceImport,
-					CountImage = n.ImagesList.Count(),
-					FirseImagePath = n.ImagesList.Any() ? n.ImagesList.Select(i => i.ImagePath).FirstOrDefault() : null
-				}).Where(n => n.Name.Contains(searchModel.CodeOrNameProduct));
+					products = products.Where(n => n.Name.Contains(searchModel.CodeOrNameProduct));
+				}
 				if (searchModel.ProductGroupId.HasValue && searchModel.ProductGroupId.Value > 0)
 				{
 					products = products.Where(n => n.ProductGroupId == searchModel.ProductGroupId.Value);
@@ -194,7 +222,27 @@ namespace RegistrationAPI.Controllers
 					products = products.OrderBy(n => n.PriceExport);
 				if (searchModel.FilterId == 5)
 					products = products.OrderByDescending(n => n.PriceExport);
+
 				var results = PagingMethod.GetPaged(products, searchModel.Page, 10, searchModel.IsClientSide);
+
+				foreach (var item in results.Results)
+				{
+					if (item.PromotionId.HasValue && item.PromotionId.Value > 0)
+					{
+						if (item.PromotionTypeId.HasValue && item.PromotionTypeId.Value == 1)
+						{
+							//discount by %
+							var discount = item.PriceExport - (item.PriceExport * double.Parse(item.Value) / 100);
+							item.PriceWithDiscount = discount;
+						}
+						else
+						{
+							//discount by money
+							var discount = item.PriceExport - double.Parse(item.Value);
+							item.PriceWithDiscount = discount;
+						}
+					}
+				}
 				return Ok(results);
 			}
 			catch (Exception ex)
@@ -229,6 +277,28 @@ namespace RegistrationAPI.Controllers
 				Description = product.Description,
 				Sizes = this.generateProductSizes(product.Id)
 			};
+			var promotionProduct = _context.PromotionProducts.Include(n => n.Promotion).Where(n => n.ProductId == productId).ToList();
+			if(promotionProduct.Count() > 0)
+			{
+				double discountTotal = 0;
+				foreach(var item in promotionProduct)
+				{
+					if(item.Promotion.PromotionTypeId == 1)
+					{
+						//discount by %
+						var discount =(result.PriceExport * double.Parse(item.Promotion.Value) / 100);
+						discountTotal += discount;
+					} 
+					else
+					{
+						//discount by money
+						var discount = double.Parse(item.Promotion.Value);
+						discountTotal += discount;
+					}
+					
+				}
+				result.PriceWithDiscount = result.PriceExport - discountTotal;
+			}
 			return  Ok(result);
 		}
 		[HttpGet("imagesProduct/{imagesOfProductId}")]

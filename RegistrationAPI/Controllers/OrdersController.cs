@@ -85,6 +85,7 @@ namespace RegistrationAPI.Controllers
 				obj.DeliveryType = order.DeliveryType;
 				obj.PaymentType = order.PaymentType;
 				obj.OrderDate = order.OrderDate;
+				obj.Note = order.Note;
 
 				//lấy ra giỏ hàng của KH đó
 				var customerCarts = _context.Carts.Where(c => c.CustomerId == order.CustomerId).ToList();
@@ -128,9 +129,10 @@ namespace RegistrationAPI.Controllers
 				message.To.Add(to);
 
 				message.Subject = "Mã đơn hàng: " + orderCode;
-
+				
 				BodyBuilder bodyBuilder = new BodyBuilder();
-				bodyBuilder.HtmlBody = this.GenerateHTMLEmail(emailDetails);
+				bodyBuilder.HtmlBody = this.GenerateHTMLEmail(emailDetails, order.Note);
+				
 
 				message.Body = bodyBuilder.ToMessageBody();
 
@@ -157,7 +159,7 @@ namespace RegistrationAPI.Controllers
 			  .Select(s => s[random.Next(s.Length)]).ToArray());
 		}
 
-		public string GenerateHTMLEmail(List<EmailDetailDTO> details)
+		public string GenerateHTMLEmail(List<EmailDetailDTO> details, string orderNote)
 		{
 			if (details == null) return "";
 
@@ -169,6 +171,7 @@ namespace RegistrationAPI.Controllers
 				"<p>Số lượng: " + item.NumberOfProduct + "</p >" +
 				"<p>Đơn giá: " + item.UnitPrice.ToString("N0") + "</p >" +
 				"<p>Thành tiền: " + item.TotalPrice.ToString("N0") + "</p >" +
+				"<p>Ghi chú: "  + orderNote  + "</p>" +
 				"<p>----------------------------------</p>";
 			}
 			result += "<p>Tổng hóa đơn: " + totalBill.ToString("N0") + "</p >";
